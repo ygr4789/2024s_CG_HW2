@@ -156,9 +156,15 @@ class HalfEdgeStructure:
                 
             if num_vert[vi] == -1:
                 n = 1
+                # print(vert[i])
                 i_ = next[twin[i]]
+                # print(vert[i_])
+                # cnt =0
                 while i_ != i:
+                    # cnt += 1
                     n += 1
+                    # if(cnt < 30):
+                        # print(vert[i_])
                     i_ = next[twin[i_]]
                 num_vert[vi] = n
                 

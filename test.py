@@ -1,8 +1,9 @@
-import numpy as np
+from subdiv import HalfEdgeStructure
+from obj_parser import *
 
-l = [1, 2, 3]
-print(' '.join(l))
-data = "%s" % ' '.join(l)
-print(data)
+hs = HalfEdgeStructure()
 
-
+vs, fs = load_obj_to_vflist("./model/Manifold/menger1.obj")
+print(len(vs), len(fs))
+hs.parse_vf(vs, fs)
+hs.subdiv()

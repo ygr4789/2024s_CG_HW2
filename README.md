@@ -8,6 +8,8 @@ Supported platforms are:
 * Mac OS X 10.3 or later
 * Linux, with the following libraries (most recent distributions will have these in a default installation):
 
+This program has been implemented and tested in the Ubuntu 20.04 environment.
+
 ## Installation
 Pyglet is installable from PyPI:
 
@@ -17,4 +19,33 @@ You can run the code easily by:
 
     python3 main.py
     
+If necessary, install packages by:
+
+    pip install -r requirements.txt
+    
 ## Instruction
+### Common
+- Camera Controls
+    - Left-Click + Drag : Rotate camera direction
+    - Right-Click + Drag : Translate camera position
+    - Scroll Up/Down : Camera zoom-in/out
+- Control Points
+    - Select and move control points with mouse
+- Export
+    - Save mesh as ```*.obj``` format file
+- Color Edit
+    - Change mesh color with color picker
+- Wireframe
+    - Draw edges with constant color
+### Curve Mode
+- Reset
+    - Set control points to initial state
+- Steps
+    - Determine width/height of surface's grid
+- Type
+    - Choose between Bezier and B-Spline
+### Subdiv Mode
+- Import
+    - Load ```*.obj``` format file
+- Steps
+    - Iterate subdivision with Catmull-Clark algorithm

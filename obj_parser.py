@@ -60,6 +60,7 @@ def load_obj_to_vflist(filename, file=None):
             flist.append(face)
 
     return vlist, flist
+    # return merge_dup_vert(vlist, flist)
 
 def save_vflist_to_obj(filename, vlist, flist):
     try:
@@ -74,3 +75,32 @@ def save_vflist_to_obj(filename, vlist, flist):
     except (UnicodeDecodeError, OSError):
         raise Exception(f"model save exception.")
     pass
+
+def merge_dup_vert(vlist, flist):
+    new_vlist = []
+    new_flist = []
+    
+    refine_id = [0] * len(vlist)
+    for i, v in enumerate(vlist):
+        i_ = vlist.index(v)
+        if i == i_:
+            refine_id[i] = len(new_vlist)
+            new_vlist.append(v)
+        else :
+            refine_id[i] = refine_id[i_]
+            
+    for f in flist:
+        new_f = []
+        for i in f:
+            new_f.append(refine_id[i])
+            
+        not_dup = True
+        for f_ in new_flist:
+            if set(f_) == set(new_f):
+                not_dup = False
+                new_flist.remove(f_)
+                break
+        if not_dup:
+            new_flist.append(new_f)
+        
+    return new_vlist, new_flist
