@@ -112,10 +112,10 @@ class HalfEdgeStructure:
         
         self.step += 1
         
-        h = np.array(self.h)
-        v = np.array(self.v)
-        f = np.array(self.f)
-        e = np.array(self.e)
+        h = self.h
+        v = self.v
+        f = self.f
+        e = self.e
         twin = np.array(self.twin)
         next = np.array(self.next)
         prev = np.array(self.prev)
@@ -139,10 +139,11 @@ class HalfEdgeStructure:
         num_vert = np.full(v, -1)
         num_face = np.full(f, -1)
         
-        for i in range(h): # cyclelength, valence
+        for i in range(h): # cyclelength
+            if self.step > 0:
+                num_face = np.full(f, 4)
+                break
             fi = face[i]
-            vi = vert[i]
-            
             if num_face[fi] == -1:
                 n = 1
                 i_ = next[i]
@@ -151,6 +152,8 @@ class HalfEdgeStructure:
                     i_ = next[i_]
                 num_face[fi] = n
                 
+        for i in range(h): # valence
+            vi = vert[i]
             if num_vert[vi] == -1:
                 n = 1
                 i_ = next[twin[i]]
@@ -191,10 +194,10 @@ class HalfEdgeStructure:
         new_face[2::4] = curr
         new_face[3::4] = curr
         
-        self.h = new_h.tolist()
-        self.v = new_v.tolist()
-        self.f = new_f.tolist()
-        self.e = new_e.tolist()
+        self.h = new_h
+        self.v = new_v
+        self.f = new_f
+        self.e = new_e
         self.twin = new_twin.tolist()
         self.next = new_next.tolist()
         self.prev = new_prev.tolist()
@@ -235,15 +238,21 @@ class HalfEdgeStructure:
         return lines
         
     def lines(self):
-        lines = []
-        for i in range(self.h):
-            v1 = self.vert[i]
-            v2 = self.vert[self.next[i]]
-            lines.extend(self.point[v1].xyz)
-            lines.extend(self.point[v2].xyz)
+        next = np.array(self.next)
+        vert = np.array(self.vert)
+        point = np.array(self.point)
+        
+        p1 = point[vert]
+        p2 = point[vert[next]]
+        
+        e = np.stack((p1, p2), axis=1)
+        lines = e.flatten().tolist()
         return lines
     
     def geo(self):
+        if self.step > 0:
+            return self.fast_geo()
+        
         geo = Geometry()
         
         visit = [False]* self.f
@@ -274,6 +283,44 @@ class HalfEdgeStructure:
                     
         geo.vertices = vertices
         geo.normals = normals
+        return geo
+    
+    def fast_geo(self):
+        h = self.h
+        f = self.f
+        next = np.array(self.next)
+        vert = np.array(self.vert)
+        face = np.array(self.face)
+        point = np.array(self.point)
+        
+        curr = np.arange(h)
+        f_he = np.zeros(f, dtype=int)
+        f_he[face] = curr
+        
+        # 1 - 4
+        # | \ |
+        # 2 - 3
+        v1 = vert[f_he]; f_he=next[f_he]
+        v2 = vert[f_he]; f_he=next[f_he]
+        v3 = vert[f_he]; f_he=next[f_he]
+        v4 = vert[f_he]
+        
+        p1 = point[v1]
+        p2 = point[v2]
+        p3 = point[v3]
+        p4 = point[v4]
+        
+        u_t = np.stack((p1, p2, p3), axis=1)
+        l_t = np.stack((p3, p4, p1), axis=1)
+        t = np.vstack((u_t, l_t))
+
+        n = np.cross(t[:, 1] - t[:, 0], t[:, 2] - t[:, 1])
+        n = n / np.linalg.norm(n, axis=1)[:, np.newaxis]
+        n = np.repeat(n[:, np.newaxis, :], 3, axis=1)
+        
+        geo = Geometry()
+        geo.vertices = t.flatten().tolist()
+        geo.normals = n.flatten().tolist()
         return geo
     
     def vflist(self):

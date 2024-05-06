@@ -182,6 +182,7 @@ class Engine:
                 elif cmd == "update_visibility":
                     self.update_visibility()
             except Exception as e:
+                raise e
                 ui.log(e)
         
         self.update_control_points()
