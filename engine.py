@@ -26,6 +26,8 @@ class Engine:
     def setup(self):
         self.control_points = ObjectPoint([0,0,0])
         self.renderer.add_object(self.control_points)
+        self.grid_helper = ObjectLine(grid_lines(), Vec4(0.25,0.25,0.25,1))
+        self.renderer.add_object(self.grid_helper)
         self.set_curve()
         self.set_subdiv()
         self.change_mode()
@@ -57,6 +59,7 @@ class Engine:
         self.subdiv_guide.group.visible = mode == MODE_SUBDIV and control
         
         self.control_points.group.visible = control
+        self.grid_helper.group.visible = grid
 
     def set_curve(self):
         self.control_surface = ControlSurface()
@@ -88,6 +91,13 @@ class Engine:
         for p in self.controller.points:
             points.extend([*p.xyz])
         self.control_points.update(points)
+        
+    def update_grid_helper(self):
+        ui = self.renderer.ui
+        size = ui.grid_size
+        unit = ui.grid_unit
+        
+        self.grid_helper.update(grid_lines(size, unit))
             
     def update_curve(self):
         ui = self.renderer.ui
@@ -165,6 +175,8 @@ class Engine:
                     self.update_curve()
                 elif cmd == "update_subdiv":
                     self.update_subdiv()
+                elif cmd == "update_grid":
+                    self.update_grid_helper()
                 elif cmd == "update_color":
                     self.update_color()
                 elif cmd == "update_visibility":

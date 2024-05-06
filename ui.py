@@ -22,6 +22,8 @@ class UI:
         self.curve_step = 9
         self.subdiv_step = 0
         self.grid_active = False
+        self.grid_size = 100
+        self.grid_unit = 1
         self.wireframe_active = False
         self.control_active = True
         self.filename = None
@@ -107,7 +109,7 @@ class UI:
                     self.command_queue.append("update_subdiv")
 
         # child (common)
-        with imgui.begin_child("Common", border=True, height=150):
+        with imgui.begin_child("Common", border=True, height=200):
 
             # button (export)
             if imgui.button("Export"):
@@ -131,10 +133,6 @@ class UI:
             if changed:
                 self.command_queue.append("update_color")
 
-            # radio (grid onoff)
-            if imgui.radio_button("Grid On/Off", self.grid_active):
-                self.grid_active = not self.grid_active
-                self.command_queue.append("update_visibility")
 
             # radio (wireframe onoff)
             if imgui.radio_button("Wireframe On/Off", self.wireframe_active):
@@ -145,6 +143,28 @@ class UI:
             if imgui.radio_button("Control On/Off", self.control_active):
                 self.control_active = not self.control_active
                 self.command_queue.append("update_visibility")
+                
+            # collapse (grid options)
+            expanded, _ = imgui.collapsing_header("Grid Options", None)
+            if expanded:
+                # radio (grid onoff)
+                if imgui.radio_button("Grid On/Off", self.grid_active):
+                    self.grid_active = not self.grid_active
+                    self.command_queue.append("update_visibility")
+                    
+                # slider int (grid size)
+                changed, self.grid_size = imgui.slider_int(
+                    "Size", self.grid_size, min_value=1, max_value=100, format="%d"
+                )
+                if changed:
+                    self.command_queue.append("update_grid")
+            
+                # slider float (grid unit)
+                changed, self.grid_unit = imgui.slider_float(
+                    "Unit", self.grid_unit, min_value=0.1, max_value=10.0, format="%.2f"
+                )
+                if changed:
+                    self.command_queue.append("update_grid")
 
         # child (prompt)
         with imgui.begin_child("Prompt", border=True, height=30):

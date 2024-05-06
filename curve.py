@@ -87,7 +87,7 @@ class ControlSurface:
         p2 = p[u_i + 1, v_i + 0]
         p3 = p[u_i + 0, v_i + 1]
         p4 = p[u_i + 1, v_i + 1]
-        lines = np.stack((p1,p2,p3,p4,p4,p3,p3,p1), axis=1).flatten().tolist()
+        lines = np.stack((p1,p2,p2,p4,p4,p3,p3,p1), axis=1).flatten().tolist()
         return lines
 
     def geo(self):
