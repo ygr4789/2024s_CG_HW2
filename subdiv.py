@@ -112,35 +112,32 @@ class HalfEdgeStructure:
         
         self.step += 1
         
-        h = self.h
-        v = self.v
-        f = self.f
-        e = self.e
-        twin = self.twin
-        next = self.next
-        prev = self.prev
-        vert = self.vert
-        edge = self.edge
-        face = self.face
-        point = self.point
+        h = np.array(self.h)
+        v = np.array(self.v)
+        f = np.array(self.f)
+        e = np.array(self.e)
+        twin = np.array(self.twin)
+        next = np.array(self.next)
+        prev = np.array(self.prev)
+        vert = np.array(self.vert)
+        edge = np.array(self.edge)
+        face = np.array(self.face)
+        point = np.array(self.point)
         
         new_h = 4 * h
         new_v = v + f + e
         new_f = h
         new_e = 2 * e + h
-        new_twin = [-1] * new_h
-        new_next = [-1] * new_h
-        new_prev = [-1] * new_h
-        new_vert = [-1] * new_h
-        new_edge = [-1] * new_h
-        new_face = [-1] * new_h
-        new_point = []
+        new_twin = np.full(new_h, -1)
+        new_next = np.full(new_h, -1)
+        new_prev = np.full(new_h, -1)
+        new_vert = np.full(new_h, -1)
+        new_edge = np.full(new_h, -1)
+        new_face = np.full(new_h, -1)
+        new_point = np.zeros((new_v, 3))
         
-        for i in range(new_v):
-            new_point.append(Vec3())
-        
-        num_vert = [-1] * v
-        num_face = [-1] * f
+        num_vert = np.full(v, -1)
+        num_face = np.full(f, -1)
         
         for i in range(h): # cyclelength, valence
             fi = face[i]
@@ -156,82 +153,77 @@ class HalfEdgeStructure:
                 
             if num_vert[vi] == -1:
                 n = 1
-                # print(vert[i])
                 i_ = next[twin[i]]
-                # print(vert[i_])
-                # cnt =0
                 while i_ != i:
-                    # cnt += 1
                     n += 1
-                    # if(cnt < 30):
-                        # print(vert[i_])
                     i_ = next[twin[i_]]
                 num_vert[vi] = n
                 
-        for i in range(h): # halfedge refinement
-            i_ = prev[i]
-            
-            new_twin[4*i + 0] = 4*next[twin[i]] + 3
-            new_twin[4*i + 1] = 4*next[i] + 2
-            new_twin[4*i + 2] = 4*prev[i] + 1
-            new_twin[4*i + 3] = 4*twin[prev[i]] + 0
-            
-            new_next[4*i + 0] = 4*i + 1
-            new_next[4*i + 1] = 4*i + 2
-            new_next[4*i + 2] = 4*i + 3
-            new_next[4*i + 3] = 4*i + 0
-            
-            new_prev[4*i + 0] = 4*i + 3
-            new_prev[4*i + 1] = 4*i + 0
-            new_prev[4*i + 2] = 4*i + 1
-            new_prev[4*i + 3] = 4*i + 2
-            
-            new_vert[4*i + 0] = vert[i]
-            new_vert[4*i + 1] = v + f + edge[i]
-            new_vert[4*i + 2] = v + face[i]
-            new_vert[4*i + 3] = v + f + edge[i_]
-            
-            new_edge[4*i + 0] = 2*edge[i] if i > twin[i] else 2*edge[i]+1
-            new_edge[4*i + 1] = 2*e + i
-            new_edge[4*i + 2] = 2*e + i_
-            new_edge[4*i + 3] = 2*edge[i_]+1 if i_ > twin[i_] else 2*edge[i_]
-            
-            new_face[4*i + 0] = i
-            new_face[4*i + 1] = i
-            new_face[4*i + 2] = i
-            new_face[4*i + 3] = i
-            
-            self.h = new_h
-            self.v = new_v
-            self.f = new_f
-            self.e = new_e
-            self.twin = new_twin
-            self.next = new_next
-            self.prev = new_prev
-            self.vert = new_vert
-            self.edge = new_edge
-            self.face = new_face
+        curr = np.arange(h)
                 
-        for i in range(h): # face point
-            n = num_face[face[i]] # face's num of sides
-            vi = vert[i] # halfedge vertex ID
-            fi = v + face[i] # new face point fertex ID
-            new_point[fi] += point[vi] / n
+        new_twin[0::4] = 4*next[twin] + 3
+        new_twin[1::4] = 4*next + 2
+        new_twin[2::4] = 4*prev + 1
+        new_twin[3::4] = 4*twin[prev] + 0
+        
+        new_next[0::4] = 4*curr + 1
+        new_next[1::4] = 4*curr + 2
+        new_next[2::4] = 4*curr + 3
+        new_next[3::4] = 4*curr + 0
+        
+        new_prev[0::4] = 4*curr + 3
+        new_prev[1::4] = 4*curr + 0
+        new_prev[2::4] = 4*curr + 1
+        new_prev[3::4] = 4*curr + 2
+        
+        new_vert[0::4] = vert
+        new_vert[1::4] = edge + v + f
+        new_vert[2::4] = face + v
+        new_vert[3::4] = edge[prev] + v + f
+        
+        new_edge[0::4] = np.where(curr > twin, 2*edge, 2*edge+1)
+        new_edge[1::4] = curr + 2*e
+        new_edge[2::4] = prev + 2*e
+        new_edge[3::4] = np.where(prev > twin[prev], 2*edge[prev]+1, 2*edge[prev])
+        
+        new_face[0::4] = curr
+        new_face[1::4] = curr
+        new_face[2::4] = curr
+        new_face[3::4] = curr
+        
+        self.h = new_h.tolist()
+        self.v = new_v.tolist()
+        self.f = new_f.tolist()
+        self.e = new_e.tolist()
+        self.twin = new_twin.tolist()
+        self.next = new_next.tolist()
+        self.prev = new_prev.tolist()
+        self.vert = new_vert.tolist()
+        self.edge = new_edge.tolist()
+        self.face = new_face.tolist()
+                
+        # face point
+        n = num_face[face] # face's num of sides
+        n = n[:,np.newaxis]
+        vi = vert # halfedge vertex ID
+        fi = face + v # new face point fertex ID
+        np.add.at(new_point, fi, point[vi] / n)
+        
+        # smooth edge point
+        vi = vert # halfedge vertex ID
+        fi = face + v # new face point vertex ID
+        ei = edge + v + f  # new edge point vertex ID
+        np.add.at(new_point, ei, (new_point[fi] + point[vi]) / 4)
             
-        for i in range(h): # smooth edge point
-            vi = vert[i] # halfedge vertex ID
-            fi = v + face[i] # new face point vertex ID
-            ei = v + f + edge[i] # new edge point vertex ID
-            new_point[ei] += (new_point[fi] + point[vi]) / 4
+        # smooth vert point
+        n = num_vert[vert] # vert's num of adj edges
+        n = n[:,np.newaxis]
+        vi = vert # halfedge vertex ID
+        fi = face + v  # new face point vertex ID
+        ei = edge + v + f  # new edge point vertex ID
+        np.add.at(new_point, vi, (new_point[ei] * 4 - new_point[fi] + (point[vi]) * (n-3)) / (n*n))
             
-        for i in range(h): # smooth vert point
-            n = num_vert[vert[i]] # vert's num of adj edges
-            vi = vert[i] # halfedge vertex ID
-            fi = v + face[i] # new face point vertex ID
-            ei = v + f + edge[i] # new edge point vertex ID
-            new_point[vi] += (new_point[ei] * 4 - new_point[fi] + (point[vi]) * (n-3)) / (n*n)
-            
-        self.point = new_point
+        self.point = [Vec3(*p) for p in new_point]
         
     def guide_lines(self):
         lines = []
