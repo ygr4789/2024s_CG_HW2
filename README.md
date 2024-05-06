@@ -31,19 +31,20 @@ If necessary, install packages by:
     - Scroll Up/Down : Camera zoom-in/out
 - Control Points
     - Select and move control points with mouse
+- Reset
+    - Set control points to initial state
 - Export
     - Save mesh as ```*.obj``` format file
 - Color Edit
     - Change mesh color with color picker
 - Wireframe
     - Draw edges with constant color
+- Grid Helper
 ### Curve Mode
-- Reset
-    - Set control points to initial state
-- Steps
-    - Determine width/height of surface's grid
 - Type
     - Choose between Bezier and B-Spline
+- Steps
+    - Determine width/height of surface's grid
 ### Subdiv Mode
 - Import
     - Load ```*.obj``` format file

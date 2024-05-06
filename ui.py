@@ -56,23 +56,10 @@ class UI:
                         imgui.set_item_default_focus()
 
         # child (option)
-        with imgui.begin_child("Options", border=True, height=100):
+        with imgui.begin_child("Options", border=True, height=60):
 
             # curve mode child
             if self.mode_selected == MODE_CURVE:
-                # button (reset)
-                if imgui.button("Reset"):
-                    self.command_queue.append("reset_curve")
-                imgui.same_line()
-                imgui.text("Reset Control Points")
-
-                # slider int (curve_step)
-                changed, self.curve_step = imgui.slider_int(
-                    "Steps", self.curve_step, min_value=1, max_value=100, format="%d"
-                )
-                if changed:
-                    self.command_queue.append("update_curve")
-
                 # combo (type select)
                 type_items = ["Bezier", "B-Spline"]
                 with imgui.begin_combo("Type", type_items[self.type_selected]) as combo:
@@ -86,6 +73,14 @@ class UI:
 
                             if is_selected:
                                 imgui.set_item_default_focus()
+                                
+                # slider int (curve_step)
+                changed, self.curve_step = imgui.slider_int(
+                    "Steps", self.curve_step, min_value=1, max_value=100, format="%d"
+                )
+                if changed:
+                    self.command_queue.append("update_curve")
+
 
             # subdiv mode child
             if self.mode_selected == MODE_SUBDIV:
@@ -109,7 +104,12 @@ class UI:
                     self.command_queue.append("update_subdiv")
 
         # child (common)
-        with imgui.begin_child("Common", border=True, height=200):
+        with imgui.begin_child("Common", border=True, height=220):
+            # button (reset)
+            if imgui.button("Reset"):
+                self.command_queue.append("reset")
+            imgui.same_line()
+            imgui.text("Reset Control Points")
 
             # button (export)
             if imgui.button("Export"):

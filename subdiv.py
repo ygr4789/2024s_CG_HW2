@@ -12,13 +12,13 @@ class HalfEdgeStructure:
         self.v: int = 0
         self.f: int = 0
         self.e: int = 0
-        self.twin: list[int] = []
-        self.next: list[int] = []
-        self.prev: list[int] = []
-        self.vert: list[int] = []
-        self.edge: list[int] = []
-        self.face: list[int] = []
-        self.point: list[Vec3] = []
+        self.twin = np.array([])
+        self.next = np.array([])
+        self.prev = np.array([])
+        self.vert = np.array([])
+        self.edge = np.array([])
+        self.face = np.array([])
+        self.point = np.array([])
         
         self.init_h: int = 0
         self.init_v: int = 0
@@ -32,26 +32,29 @@ class HalfEdgeStructure:
         self.init_face: list[int] = []
         self.init_point: list[Vec3] = []
         
+        self.saved_point: list[Vec3] = []
+        
     def parse_vf(self, vertices: list, faces: list):
         self.__init__()
         
         for f in faces:
-            self.h += len(f)
-        self.v = len(vertices)
-        self.f = len(faces)
+            self.init_h += len(f)
+        self.init_v = len(vertices)
+        self.init_f = len(faces)
         
-        self.twin = [-1] * self.h
-        self.next = [-1] * self.h
-        self.prev = [-1] * self.h
-        self.vert = [-1] * self.h
-        self.edge = [-1] * self.h
-        self.face = [-1] * self.h
+        self.init_twin = [-1] * self.init_h
+        self.init_next = [-1] * self.init_h
+        self.init_prev = [-1] * self.init_h
+        self.init_vert = [-1] * self.init_h
+        self.init_edge = [-1] * self.init_h
+        self.init_face = [-1] * self.init_h
         
         edge_map = {}
         index = 0
         
         for p in vertices:
-            self.point.append(Vec3(*p))
+            self.init_point.append(Vec3(*p))
+            self.saved_point.append(Vec3(*p))
             
         for f_i, f in enumerate(faces):
             n = len(f)
@@ -63,48 +66,43 @@ class HalfEdgeStructure:
                 e_i = len(edge_map)
                 if e in edge_map:
                     twin = edge_map[e]
-                    e_i = self.edge[twin]
-                    self.twin[index] = twin
-                    self.twin[twin] = index
+                    e_i = self.init_edge[twin]
+                    self.init_twin[index] = twin
+                    self.init_twin[twin] = index
                 else:
                     edge_map[e] = index
                 
-                self.next[index] = index + 1 - (n if i == n-1 else 0)
-                self.prev[index] = index - 1 + (n if i == 0 else 0)
+                self.init_next[index] = index + 1 - (n if i == n-1 else 0)
+                self.init_prev[index] = index - 1 + (n if i == 0 else 0)
                     
-                self.vert[index] = v_i
-                self.edge[index] = e_i
-                self.face[index] = f_i
+                self.init_vert[index] = v_i
+                self.init_edge[index] = e_i
+                self.init_face[index] = f_i
                 
                 index += 1
-        self.e = len(edge_map)
+        self.init_e = len(edge_map)
         
-        self.init_h = self.h
-        self.init_v = self.v
-        self.init_f = self.f
-        self.init_e = self.e
-        self.init_twin = self.twin
-        self.init_next = self.next
-        self.init_prev = self.prev
-        self.init_vert = self.vert
-        self.init_edge = self.edge
-        self.init_face = self.face
-        self.init_point = self.point
+        self.regress()
                 
     def reset(self):
+        for i, p in enumerate(self.saved_point):
+            self.init_point[i] = p
+        self.regress()
+                
+    def regress(self):
         self.step = 0
         
         self.h = self.init_h
         self.v = self.init_v
         self.f = self.init_f
         self.e = self.init_e
-        self.twin = self.init_twin
-        self.next = self.init_next
-        self.prev = self.init_prev
-        self.vert = self.init_vert
-        self.edge = self.init_edge
-        self.face = self.init_face
-        self.point = self.init_point
+        self.twin = np.array(self.init_twin)
+        self.next = np.array(self.init_next)
+        self.prev = np.array(self.init_prev)
+        self.vert = np.array(self.init_vert)
+        self.edge = np.array(self.init_edge)
+        self.face = np.array(self.init_face)
+        self.point = np.array(self.init_point)
                 
     def subdiv(self):
         if -1 in self.twin:
@@ -116,13 +114,13 @@ class HalfEdgeStructure:
         v = self.v
         f = self.f
         e = self.e
-        twin = np.array(self.twin)
-        next = np.array(self.next)
-        prev = np.array(self.prev)
-        vert = np.array(self.vert)
-        edge = np.array(self.edge)
-        face = np.array(self.face)
-        point = np.array(self.point)
+        twin = self.twin
+        next = self.next
+        prev = self.prev
+        vert = self.vert
+        edge = self.edge
+        face = self.face
+        point = self.point
         
         new_h = 4 * h
         new_v = v + f + e
@@ -198,12 +196,12 @@ class HalfEdgeStructure:
         self.v = new_v
         self.f = new_f
         self.e = new_e
-        self.twin = new_twin.tolist()
-        self.next = new_next.tolist()
-        self.prev = new_prev.tolist()
-        self.vert = new_vert.tolist()
-        self.edge = new_edge.tolist()
-        self.face = new_face.tolist()
+        self.twin = new_twin
+        self.next = new_next
+        self.prev = new_prev
+        self.vert = new_vert
+        self.edge = new_edge
+        self.face = new_face
                 
         # face point
         n = num_face[face] # face's num of sides
@@ -226,7 +224,7 @@ class HalfEdgeStructure:
         ei = edge + v + f  # new edge point vertex ID
         np.add.at(new_point, vi, (new_point[ei] * 4 - new_point[fi] + (point[vi]) * (n-3)) / (n*n))
             
-        self.point = [Vec3(*p) for p in new_point]
+        self.point = new_point
         
     def guide_lines(self):
         lines = []
@@ -275,9 +273,10 @@ class HalfEdgeStructure:
                     p2 = self.point[vi]
                     p01 = p1 - p0
                     p12 = p2 - p1
-                    n = p01.cross(p12).normalize()
-                    vertices += [*p0.xyz, *p1.xyz, *p2.xyz]
-                    normals += [*n.xyz] * 3
+                    n = np.cross(p01,p12)
+                    n = n / np.linalg.norm(n)
+                    vertices += [*p0, *p1, *p2]
+                    normals += [*n] * 3
                 i_ = self.next[i_]
                 vlast = vi
                     
@@ -288,10 +287,10 @@ class HalfEdgeStructure:
     def fast_geo(self):
         h = self.h
         f = self.f
-        next = np.array(self.next)
-        vert = np.array(self.vert)
-        face = np.array(self.face)
-        point = np.array(self.point)
+        next = self.next
+        vert = self.vert
+        face = self.face
+        point = self.point
         
         curr = np.arange(h)
         f_he = np.zeros(f, dtype=int)

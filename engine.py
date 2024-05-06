@@ -34,6 +34,16 @@ class Engine:
         self.update_color()
         self.update_visibility()
         
+    def reset(self):
+        ui = self.renderer.ui
+        mode = ui.mode_selected
+        if mode == MODE_CURVE:
+            self.control_surface.reset()
+            self.update_curve()
+        elif mode == MODE_SUBDIV:
+            self.halgedge_structure.reset()
+            self.update_subdiv()
+        
     def change_mode(self):
         ui = self.renderer.ui
         mode = ui.mode_selected
@@ -119,7 +129,7 @@ class Engine:
         remain_step = step - curr_step
         
         if remain_step < 0 or forced:
-            self.halgedge_structure.reset()
+            self.halgedge_structure.regress()
             remain_step = step
         for i in range(remain_step):
             self.halgedge_structure.subdiv()
@@ -168,9 +178,8 @@ class Engine:
                 elif cmd == "export":
                     self.export_obj()
                     ui.log("Exported obj file")
-                elif cmd == "reset_curve":
-                    self.control_surface.reset()
-                    self.update_curve()
+                elif cmd == "reset":
+                    self.reset()
                 elif cmd == "update_curve":
                     self.update_curve()
                 elif cmd == "update_subdiv":
